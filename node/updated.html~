@@ -1,0 +1,12 @@
+<html>
+<head>
+<title>SmartRain</title>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;"/>
+</head>
+<body background="rain.jpg" style="background-size:100% 100%;">
+<p><strong><font face="Verdana" size="5pt">SmartRain</font></strong><br></p>
+<p><strong><font face="Verdana" size="4pt">Settings updated.</font></strong><br></p>
+<input Type="button" VALUE="Back" onClick="history.go(-1);return true;" style="font-size:15;">
+</form>
+</body>
+</html>
