@@ -56,7 +56,7 @@ struct Weather
 
   bool IsRaining()
   {
-    if (status == "Rain" || status == "Snow" || status == "Mist" || status == "Hail" || status == "Sleet")
+    if (status == "Rain" || status == "Snow" || status == "Hail" || status == "Sleet")
       return true;
 
     // High humidity + dropping pressure = likely rain.

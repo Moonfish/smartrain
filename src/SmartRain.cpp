@@ -63,12 +63,14 @@ bool SmartRain::Init()
 
   m_log.WriteEvent("Restarting Smartrain");
 
+  std::cout << "Obtaining IP address." << std::endl;
   NetworkInfo ni;
   std::string ipMsg = "IP Address: ";
   ipMsg += ni.GetIP(1);
   m_log.WriteEvent(ipMsg.c_str());
 
   m_lcd.PrintLine(0, "SmartRain 1.1");
+
   LoadSettings();
   m_lcd.Clear();
 

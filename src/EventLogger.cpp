@@ -29,6 +29,8 @@ void EventLogger::WriteEvent(const std::string& entry, bool flushToDisk /* = tru
 
 void EventLogger::WriteEvent(const char* entry, bool flushToDisk /* = true */)
 {
+  return;
+
   time_t now = time(nullptr);
   auto timeInfo = localtime(&now);
 
@@ -50,6 +52,8 @@ void EventLogger::WriteEvent(const char* entry, bool flushToDisk /* = true */)
 
 bool EventLogger::Open()
 {
+  return true;
+
   std::cout << m_fileName << std::endl;
   std::ifstream strm(m_fileName);
 
