@@ -5,8 +5,8 @@ OBJDIR = obj
 #LIB=-L/home/russell/code/arm/boost/bin.v2/libs/system/build/gcc-4.9.3/release/threading-multi/
 CXX=g++
 
-#CFLAGS=-Wall -g -std=c++11 -Wl,--no-as-needed $(INC) $(LIB) 
-CFLAGS=-Wall -g -std=c++11 -Wl,--no-as-needed 
+#CFLAGS=-Wall -std=c++11 -Wl,--no-as-needed $(INC) $(LIB) 
+CFLAGS=-Wall -std=c++11 -Wl,--no-as-needed 
 LDFLAGS=-Wl,--no-as-needed -pthread -lboost_system
 # -lboost_system 
 OBJECTS=$(addprefix $(OBJDIR)/, BoneIO.o util.o MCP23008.o Keypad.o LCD.o \
