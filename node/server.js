@@ -157,6 +157,8 @@ function sendFile(name, res){
 // * * * Start Program * * * 
 http.createServer(function (req, res) {
 
+  process.chdir('/home/russell/smartrain/node');
+
   var u = url.parse(req.url, true);
 
   if (u.pathname == '/rain.jpg') {

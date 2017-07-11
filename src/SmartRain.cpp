@@ -10,6 +10,7 @@
 #include <fstream>
 #include <time.h>
 #include <sys/inotify.h>
+#include <unistd.h>
 #include "SmartRain.h"
 #include "States.h"
 #include "util.h"
@@ -75,6 +76,9 @@ bool SmartRain::Init()
   m_lcd.Clear();
 
   m_currentState =  std::make_shared<StartingState>(*this);
+
+  // Start the node web service
+  execl("/usr/bin/node", "/usr/bin/node", "/home/russell/smartrain/node/server.js", (char*)nullptr);
 
   // Start background thread that checks timer
   std::thread worker(WorkerProc, this);
