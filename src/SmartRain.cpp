@@ -547,7 +547,7 @@ void SmartRain::UpdateStatusFile(const char* statusMessage)
 {
   std::string message(statusMessage);
 
-  std::ofstream statusFile("/home/russell/smartrain/node/status.txt");
+  std::ofstream statusFile("\\home\\russell\\smartrain\\node\\status.txt");
 
   std::string line = "{\"statusT\": \"";
   line += message;

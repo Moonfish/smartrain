@@ -164,6 +164,12 @@ http.createServer(function (req, res) {
     return;
   }
 
+  if (u.pathname == '/log.html')
+  {
+    sendFile('../log.html', res);
+    return;
+  }
+
   if(u.pathname == '/' || u.pathname == '/index.html') {
     onIndex(req, res);
     return;
