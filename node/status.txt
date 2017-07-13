@@ -1,4 +1,0 @@
-{
-  "statusT": "S1=Running"
-}
-

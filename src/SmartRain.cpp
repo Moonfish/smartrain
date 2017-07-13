@@ -1,4 +1,3 @@
-
 /*
  * SmartRain.cpp
  *
@@ -10,7 +9,7 @@
 #include <fstream>
 #include <time.h>
 #include <sys/inotify.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include "SmartRain.h"
 #include "States.h"
 #include "util.h"
@@ -19,6 +18,14 @@
 
 int main(int argc, const char* argv[])
 {
+  int pid = fork();
+
+  if (pid == 0)
+  {
+    execl("/usr/bin/node", "node", "/home/russell/smartrain/node/server.js");
+    return 0;
+  }
+
   SmartRain sm;
   sm.Run();
 
@@ -77,9 +84,6 @@ bool SmartRain::Init()
 
   m_currentState =  std::make_shared<StartingState>(*this);
 
-  // Start the node web service
-  execl("/usr/bin/node", "/usr/bin/node", "/home/russell/smartrain/node/server.js", (char*)nullptr);
-
   // Start background thread that checks timer
   std::thread worker(WorkerProc, this);
 
@@ -95,7 +99,7 @@ bool SmartRain::Init()
 
 bool SmartRain::LoadSettings()
 {
-  static const char* fileName = "settings.txt";
+  static const char* fileName = "/home/russell/smartrain/node/settings.txt";
 
   struct stat attr = {0};
   stat(fileName, &attr);
@@ -510,7 +514,7 @@ void SmartRain::MoveToState(std::shared_ptr<ApplicationState> newState)
 
 bool SmartRain::ProcessCommandFile()
 {
-  const char* fileName = "command.txt";
+  const char* fileName = "/home/russell/smartrain/node/command.txt";
   std::ifstream cmdFile(fileName);
   if (cmdFile.fail())
       return false;
@@ -543,7 +547,7 @@ void SmartRain::UpdateStatusFile(const char* statusMessage)
 {
   std::string message(statusMessage);
 
-  std::ofstream statusFile("status.txt");
+  std::ofstream statusFile("/home/russell/smartrain/node/status.txt");
 
   std::string line = "{\"statusT\": \"";
   line += message;

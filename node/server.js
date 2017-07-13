@@ -99,11 +99,9 @@ function updateFromForm(res, body){
     fs.writeFileSync('command.txt','S');
   }
  
-
-  // Refresh page
-  res.writeHead(302, {'Location': 'index.html'});
-  res.end();
-
+  var html = fs.readFileSync('delayedReload.html');
+  res.end(html);
+ 
   return;
 }
 
