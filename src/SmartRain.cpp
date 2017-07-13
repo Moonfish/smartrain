@@ -32,7 +32,7 @@ int main(int argc, const char* argv[])
   return 0;
 }
 
-SmartRain::SmartRain() : m_log("./log.html"), m_lcd("/dev/i2c-2", 0x21), m_relay("/dev/i2c-2", 0x24),
+SmartRain::SmartRain() : m_log("/home/russell/smartrain/log.html"), m_lcd("/dev/i2c-2", 0x21), m_relay("/dev/i2c-2", 0x24),
     m_previousState(nullptr), m_currentState(nullptr), m_lastRain(0), m_manualMode(false)
 {
   m_shutdown = false;
