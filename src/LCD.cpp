@@ -122,6 +122,9 @@ void LCDPanel::PrintLine(int lineNum, const char* text)
   SetLine(n);
   
   size_t strLen = ::strlen(text);
+
+  if (strLen <=0 || strLen > 16)
+    return;
   
   for (size_t i = 0; i < strLen; i++)
     PrintChar(text[i]);
