@@ -54,9 +54,15 @@ void SmartRain::WorkerProc(SmartRain* sr)
 {
   while(!sr->m_shutdown)
   {
-    sr->DrawLCD();
-    sr->ProcessSchedule();
-    sr->UpdateWeatherInfo();
+    try
+    {
+      sr->DrawLCD();
+      sr->ProcessSchedule();
+      sr->UpdateWeatherInfo();
+    }
+    catch(...)
+    {
+    }
 
     // Update status and check schedule once every second.
     util::msleep(300);

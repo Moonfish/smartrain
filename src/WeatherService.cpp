@@ -1,10 +1,52 @@
 #include <boost/asio.hpp>
 #include <string>
 #include <sstream>
+#include <thread>
+#include <future>
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
 #include "WeatherService.h"
 #include "json11.hpp"
 
 using boost::asio::ip::tcp;
+
+// Cancels socket after specified number of
+// milliseconds.  Cancellation is disabled if dtor runs.
+class SocketAutoCancel
+{
+public:
+  SocketAutoCancel(tcp::socket& socket, int timeoutMS): _socket(socket)
+  {
+    _exit = false;
+
+    std::async(std::launch::async, [&]()
+    {
+      std::unique_lock<std::mutex> lk(_mux);
+      std::chrono::milliseconds delay(timeoutMS);
+      _cv.wait_for(lk, delay);
+
+      if (_exit)
+        return;
+
+      socket.close();
+    });
+  }
+
+  ~SocketAutoCancel()
+  {
+    _exit = true;
+    _cv.notify_one();
+  }
+
+  bool good(){return _exit == false;}
+
+private:
+  std::mutex _mux;
+  std::condition_variable _cv;
+  tcp::socket& _socket;
+  bool _exit;
+};
 
 WeatherService::WeatherService() 
 {
@@ -31,6 +73,8 @@ WeatherData WeatherService::GetData()
   
     tcp::socket socket(io_service);
     boost::asio::connect(socket, endpoint_iterator);
+    
+    SocketAutoCancel autoCancel(socket, 15000);
 
     boost::asio::streambuf request;
     std::ostream request_stream(&request);
@@ -60,6 +104,9 @@ WeatherData WeatherService::GetData()
 
     boost::asio::read_until(socket, response, "\r\n\r\n");
 
+    if (!autoCancel.good())
+      return wdBad;
+
     // Process response header (unneeded in this case) 
     std::string header;
     while (std::getline(response_stream, header) && header != "\r");
@@ -72,6 +119,9 @@ WeatherData WeatherService::GetData()
     boost::system::error_code error;
     while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1),error))
       ss << &response;
+
+    if (!autoCancel.good())
+      return wdBad;
 
     std::string err;
     json11::Json jo = json11::Json::parse(ss.str(), err);

@@ -6,7 +6,7 @@ OBJDIR = obj
 CXX=g++
 
 #CFLAGS=-Wall -std=c++11 -Wl,--no-as-needed $(INC) $(LIB) 
-CFLAGS=-Wall -std=c++11 -Wl,--no-as-needed 
+CFLAGS=-Wall -g -std=c++11 -Wl,--no-as-needed 
 LDFLAGS=-Wl,--no-as-needed -pthread -lboost_system
 # -lboost_system 
 OBJECTS=$(addprefix $(OBJDIR)/, BoneIO.o util.o MCP23008.o Keypad.o LCD.o \
