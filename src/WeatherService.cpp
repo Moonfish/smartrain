@@ -5,11 +5,14 @@
 #include <future>
 #include <chrono>
 #include <mutex>
+#include <memory>
 #include <condition_variable>
 #include "WeatherService.h"
 #include "json11.hpp"
 
 using boost::asio::ip::tcp;
+
+const int cTimeout = 15000; // 15 seconds.
 
 // Cancels socket after specified number of
 // milliseconds.  Cancellation is disabled if dtor runs.
@@ -18,34 +21,40 @@ class SocketAutoCancel
 public:
   SocketAutoCancel(tcp::socket& socket, int timeoutMS): _socket(socket)
   {
-    _exit = false;
+    _good = true;
+    _dtored = false;
 
-    std::async(std::launch::async, [&]()
+    _thread = std::unique_ptr<std::thread>(new std::thread([&]()
     {
       std::unique_lock<std::mutex> lk(_mux);
       std::chrono::milliseconds delay(timeoutMS);
       _cv.wait_for(lk, delay);
 
-      if (_exit)
+      if (_dtored)
         return;
 
-      socket.close();
-    });
+      // Timeout detected
+      _good = false;
+      socket.cancel();
+    }));
   }
 
   ~SocketAutoCancel()
   {
-    _exit = true;
+    _dtored = true;
     _cv.notify_one();
+    _thread->join();
   }
 
-  bool good(){return _exit == false;}
+  bool good(){return _good;}
 
 private:
   std::mutex _mux;
   std::condition_variable _cv;
   tcp::socket& _socket;
-  bool _exit;
+  volatile bool _dtored;
+  volatile bool _good;
+  std::unique_ptr<std::thread> _thread;
 };
 
 WeatherService::WeatherService() 
@@ -74,54 +83,53 @@ WeatherData WeatherService::GetData()
     tcp::socket socket(io_service);
     boost::asio::connect(socket, endpoint_iterator);
     
-    SocketAutoCancel autoCancel(socket, 15000);
+		std::ostringstream ss;
 
-    boost::asio::streambuf request;
-    std::ostream request_stream(&request);
-    request_stream << "GET " << requestQuery.c_str() << " HTTP/1.0\r\n";
-    request_stream << "Host: " << requestSite << "\r\n";
-    request_stream << "Accept: */*\r\n";
-    request_stream << "Connection: close\r\n\r\n";
+    {
+		  SocketAutoCancel autoCancel(socket, cTimeout);
 
-    boost::asio::write(socket, request);
-  
-    boost::asio::streambuf response;
-    boost::asio::read_until(socket, response, "\r\n");
-  
-    std::istream response_stream(&response);
-    std::string http_version;
-    response_stream >> http_version;
-    unsigned int status_code;
-    response_stream >> status_code;
-    std::string status_message;
-    std::getline(response_stream, status_message);
+		  boost::asio::streambuf request;
+		  std::ostream request_stream(&request);
+		  request_stream << "GET " << requestQuery.c_str() << " HTTP/1.0\r\n";
+		  request_stream << "Host: " << requestSite << "\r\n";
+		  request_stream << "Accept: */*\r\n";
+		  request_stream << "Connection: close\r\n\r\n";
 
-    if (!response_stream || http_version.substr(0,5) != "HTTP/")
-      return wdBad;
+		  boost::asio::write(socket, request);
+		
+		  boost::asio::streambuf response;
+		  boost::asio::read_until(socket, response, "\r\n");
 
-    if (status_code != 200)
-      return wdBad;
+		  std::istream response_stream(&response);
+		  std::string http_version;
+		  response_stream >> http_version;
+		  unsigned int status_code;
+		  response_stream >> status_code;
+		  std::string status_message;
+		  std::getline(response_stream, status_message);
 
-    boost::asio::read_until(socket, response, "\r\n\r\n");
+		  if (!response_stream || http_version.substr(0,5) != "HTTP/")
+		    return wdBad;
 
-    if (!autoCancel.good())
-      return wdBad;
+		  if (status_code != 200)
+		    return wdBad;
 
-    // Process response header (unneeded in this case) 
-    std::string header;
-    while (std::getline(response_stream, header) && header != "\r");
- 
-    std::ostringstream ss;
-  
-    if (response.size() > 0)
-      ss << &response;
+		  boost::asio::read_until(socket, response, "\r\n\r\n");
 
-    boost::system::error_code error;
-    while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1),error))
-      ss << &response;
+		  if (!autoCancel.good())
+		    return wdBad;
 
-    if (!autoCancel.good())
-      return wdBad;
+		  // Process response header (unneeded in this case) 
+		  std::string header;
+		  while (std::getline(response_stream, header) && header != "\r");
+	 
+		  if (response.size() > 0)
+		    ss << &response;
+
+		  boost::system::error_code error;
+		  while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
+		    ss << &response;
+    }
 
     std::string err;
     json11::Json jo = json11::Json::parse(ss.str(), err);
@@ -148,19 +156,5 @@ WeatherData WeatherService::GetData()
   return wdBad;
 }
 
-size_t WeatherService::write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
-  if (!userdata)
-    return 0;
 
-  WeatherService* pService = (WeatherService*)userdata;
-  return pService->OnGetDataFromServer(ptr, size, nmemb);
-}
-
-size_t WeatherService::OnGetDataFromServer(char* ptr, size_t size, size_t nmemb)
-{
-  m_result = std::string(ptr, size * nmemb);
-
-  return size * nmemb;
-}
 
