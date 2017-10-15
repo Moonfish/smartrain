@@ -121,7 +121,7 @@ private:
   WeatherService    m_ws;
   Weather           m_weather;
 
-  LCDPanel   	      m_lcd;
+  LCDPanel   	    m_lcd;
   RelayController   m_relay;
 
   Status            m_status;
@@ -134,6 +134,7 @@ private:
   std::string       m_startTime;
   int               m_runDurations[4];
   time_t            m_lastRain;
+  time_t            m_progStartTime;
 
   volatile bool     m_shutdown;
   volatile bool     m_manualMode;

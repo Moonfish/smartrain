@@ -10,11 +10,20 @@
 #include <time.h>
 #include <sys/inotify.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/reboot.h>
 #include "SmartRain.h"
 #include "States.h"
 #include "util.h"
 #include "json11.hpp"
 #include "NetworkInfo.h"
+
+static void reboot()
+{
+  sync();
+  reboot(RB_AUTOBOOT);
+  exit(0);
+}
 
 int main(int argc, const char* argv[])
 {
@@ -71,6 +80,8 @@ void SmartRain::WorkerProc(SmartRain* sr)
 
 bool SmartRain::Init()
 {
+  time(&m_progStartTime);
+
   ::chdir("/home/russell/smartrain");
 
   std::cout << "Initializing SmartRain..." << std::endl;
@@ -339,6 +350,11 @@ void SmartRain::UpdateWeatherInfo()
     else
       m_log.WriteEvent("Unable to update weather information.");
   }
+
+  // Reboot controller every 24 hours.
+  if (now - m_progStartTime > 86400)
+    reboot();
+
 }
 
 bool SmartRain::AbortRun(std::string& reason)
