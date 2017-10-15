@@ -1,7 +1,7 @@
 {
 "startTimeT": "06:30",
 "runtime1T": "21",
-"runtime2T": "14",
+"runtime2T": "16",
 "runtime3T": "20",
 "runtime4T": "20"
 }
