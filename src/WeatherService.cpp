@@ -27,7 +27,7 @@ public:
     _thread = std::unique_ptr<std::thread>(new std::thread([&]()
     {
       std::unique_lock<std::mutex> lk(_mux);
-      std::chrono::milliseconds delay(timeoutMS);
+      std::chrono::milliseconds delay(15000);
       _cv.wait_for(lk, delay);
 
       if (_dtored)
