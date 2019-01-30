@@ -82,6 +82,7 @@ WeatherData WeatherService::GetData()
   
     tcp::socket socket(io_service);
     asio::connect(socket, endpoint_iterator);
+
     
     estd::ostringstream ss;
 
