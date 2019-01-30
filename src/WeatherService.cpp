@@ -1,4 +1,4 @@
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <string>
 #include <sstream>
 #include <thread>
@@ -10,7 +10,7 @@
 #include "WeatherService.h"
 #include "json11.hpp"
 
-using boost::asio::ip::tcp;
+using asio::ip::tcp;
 
 const int cTimeout = 15000; // 15 seconds.
 
@@ -72,33 +72,33 @@ WeatherData WeatherService::GetData()
   try
   { 
     std::string requestSite("api.openweathermap.org");
-    std::string requestQuery("/data/2.5/weather?zip=92399,us&APPID=e7d28320794a5994c8e10181cee49918");
+    std::string requestQuery("/data/2.5/weather?<client details>");
 
-    boost::asio::io_service io_service;
+    asio::io_service io_service;
     tcp::resolver resolver(io_service);
 
     tcp::resolver::query query(requestSite.c_str(), "http");
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
   
     tcp::socket socket(io_service);
-    boost::asio::connect(socket, endpoint_iterator);
+    asio::connect(socket, endpoint_iterator);
     
-		std::ostringstream ss;
+    estd::ostringstream ss;
 
     {
 		  SocketAutoCancel autoCancel(socket, cTimeout);
 
-		  boost::asio::streambuf request;
+		  asio::streambuf request;
 		  std::ostream request_stream(&request);
 		  request_stream << "GET " << requestQuery.c_str() << " HTTP/1.0\r\n";
 		  request_stream << "Host: " << requestSite << "\r\n";
 		  request_stream << "Accept: */*\r\n";
 		  request_stream << "Connection: close\r\n\r\n";
 
-		  boost::asio::write(socket, request);
+		  asio::write(socket, request);
 		
-		  boost::asio::streambuf response;
-		  boost::asio::read_until(socket, response, "\r\n");
+		  asio::streambuf response;
+		  asio::read_until(socket, response, "\r\n");
 
 		  std::istream response_stream(&response);
 		  std::string http_version;
@@ -114,7 +114,7 @@ WeatherData WeatherService::GetData()
 		  if (status_code != 200)
 		    return wdBad;
 
-		  boost::asio::read_until(socket, response, "\r\n\r\n");
+		  asio::read_until(socket, response, "\r\n\r\n");
 
 		  if (!autoCancel.good())
 		    return wdBad;
@@ -126,8 +126,8 @@ WeatherData WeatherService::GetData()
 		  if (response.size() > 0)
 		    ss << &response;
 
-		  boost::system::error_code error;
-		  while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
+		  int error;
+		  while (asio::read(socket, response, asio::transfer_at_least(1), error))
 		    ss << &response;
     }
 
